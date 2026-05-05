@@ -1,0 +1,79 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile information.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email"]
+    },
+    "Day": {
+      "title": "Day",
+      "description": "A daily log entry.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "date": { "type": "string", "format": "date" },
+        "content": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "date", "content"]
+    },
+    "Task": {
+      "title": "Task",
+      "description": "A specific task or to-do item.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "text": { "type": "string" },
+        "completed": { "type": "boolean" },
+        "startTime": { "type": "string", "format": "date-time" },
+        "dueTime": { "type": "string", "format": "date-time" },
+        "category": { "type": "string", "enum": ["SCHOOL WORK", "PERSONAL TASK"] },
+        "priority": { "type": "string", "enum": ["low", "medium", "high"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "text", "completed"]
+    },
+    "AppSettings": {
+      "title": "AppSettings",
+      "description": "User application preferences.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "theme": { "type": "string", "enum": ["light", "dark"] },
+        "schoolWorkColor": { "type": "string" },
+        "personalTaskColor": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profile documents."
+    },
+    "/settings/{userId}": {
+      "schema": "AppSettings",
+      "description": "User settings."
+    },
+    "/days/{dayId}": {
+      "schema": "Day",
+      "description": "Daily log documents."
+    },
+    "/tasks/{taskId}": {
+      "schema": "Task",
+      "description": "User tasks."
+    }
+  }
+}
