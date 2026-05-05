@@ -42,9 +42,7 @@ service cloud.firestore {
         && data.uid == request.auth.uid
         && data.email is string && data.email.size() <= 256
         && (!('displayName' in data) || (data.displayName is string && data.displayName.size() <= 128))
-        && (!('photoURL' in data) || (data.photoURL is string && data.photoURL.size() <= 512))
-        && (!('createdAt' in data) || data.createdAt == request.time)
-        && (!('updatedAt' in data) || data.updatedAt == request.time);
+        && (!('photoURL' in data) || (data.photoURL is string && data.photoURL.size() <= 512));
     }
 
     function isValidAppSettings(data) {
@@ -52,17 +50,14 @@ service cloud.firestore {
         && data.uid == request.auth.uid
         && (!('theme' in data) || data.theme in ['light', 'dark'])
         && (!('schoolWorkColor' in data) || (data.schoolWorkColor is string && data.schoolWorkColor.size() <= 20))
-        && (!('personalTaskColor' in data) || (data.personalTaskColor is string && data.personalTaskColor.size() <= 20))
-        && (!('updatedAt' in data) || data.updatedAt == request.time);
+        && (!('personalTaskColor' in data) || (data.personalTaskColor is string && data.personalTaskColor.size() <= 20));
     }
 
     function isValidDay(data) {
       return data.keys().hasAll(['uid', 'date', 'content'])
         && data.uid == request.auth.uid
         && data.date is string && data.date.size() <= 20
-        && data.content is string && data.content.size() <= 5000
-        && (!('createdAt' in data) || data.createdAt == request.time)
-        && (!('updatedAt' in data) || data.updatedAt == request.time);
+        && data.content is string && data.content.size() <= 5000;
     }
 
     function isValidTask(data) {
@@ -73,9 +68,7 @@ service cloud.firestore {
         && (!('category' in data) || data.category in ['SCHOOL WORK', 'PERSONAL TASK'])
         && (!('priority' in data) || data.priority in ['low', 'medium', 'high'])
         && (!('startTime' in data) || data.startTime == null || data.startTime is timestamp)
-        && (!('dueTime' in data) || data.dueTime == null || data.dueTime is timestamp)
-        && (!('createdAt' in data) || data.createdAt == request.time)
-        && (!('updatedAt' in data) || data.updatedAt == request.time);
+        && (!('dueTime' in data) || data.dueTime == null || data.dueTime is timestamp);
     }
 
     // --- Rules ---
@@ -83,18 +76,24 @@ service cloud.firestore {
     match /users/{userId} {
       allow get: if isOwner(userId);
       allow create: if isOwner(userId) && isValidUser(incoming())
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time
         && incoming().keys().size() <= 7;
       allow update: if isOwner(userId) && isValidUser(incoming())
         && incoming().uid == existing().uid
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
         && incoming().diff(existing()).affectedKeys().hasOnly(['email', 'displayName', 'photoURL', 'updatedAt']);
     }
 
     match /settings/{userId} {
       allow get: if isOwner(userId);
       allow create: if isOwner(userId) && isValidAppSettings(incoming())
+        && incoming().updatedAt == request.time
         && incoming().keys().size() <= 6;
       allow update: if isOwner(userId) && isValidAppSettings(incoming())
         && incoming().uid == existing().uid
+        && incoming().updatedAt == request.time
         && incoming().diff(existing()).affectedKeys().hasOnly(['theme', 'schoolWorkColor', 'personalTaskColor', 'updatedAt']);
     }
 
@@ -102,9 +101,13 @@ service cloud.firestore {
       allow get: if isDocOwner();
       allow list: if isSignedIn() && resource.data.uid == request.auth.uid;
       allow create: if isVerified() && isValidId(dayId) && isValidDay(incoming())
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time
         && incoming().keys().size() <= 6;
       allow update: if isDocOwner() && isValidDay(incoming())
         && incoming().uid == existing().uid
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
         && incoming().diff(existing()).affectedKeys().hasOnly(['content', 'date', 'updatedAt']);
       allow delete: if isDocOwner();
     }
@@ -113,9 +116,13 @@ service cloud.firestore {
       allow get: if isDocOwner();
       allow list: if isSignedIn() && resource.data.uid == request.auth.uid;
       allow create: if isVerified() && isValidId(taskId) && isValidTask(incoming())
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time
         && incoming().keys().size() <= 11;
       allow update: if isDocOwner() && isValidTask(incoming())
         && incoming().uid == existing().uid
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
         && (
           // Action: Toggle completion
           incoming().diff(existing()).affectedKeys().hasOnly(['completed', 'updatedAt']) ||
